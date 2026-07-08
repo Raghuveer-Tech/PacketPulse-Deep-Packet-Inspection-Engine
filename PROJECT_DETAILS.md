@@ -22,7 +22,7 @@ Version: 1.0
 7. Solution
 8. Technologies Used
 9. Networking Concepts Used
-10. Software Requirements
+10 Requirements
 11. Hardware Requirements
 12. Project Folder Structure
 13. Package Structure
@@ -270,9 +270,9 @@ These concepts form the foundation of modern packet inspection systems.
 
 ---
 
-# 10. Software Requirements
+# 10 Requirements
 
-To run PacketPulse successfully, the following software should be installed.
+To run PacketPulse successfully, the followin should be installed.
 
 • Java JDK 17 or later
 
@@ -2114,7 +2114,7 @@ Development
 
 • VS Code
 
-• Modular Software Design
+• Modula Design
 
 ---
 
@@ -2154,9 +2154,7 @@ Cyber Security
 
 • Rule-Based Firewall
 
-• Traffic Analysis
-
-Software Engineering
+• Traffic Analysis Engineering
 
 • Modular Architecture
 
@@ -2184,11 +2182,15 @@ The modular architecture, clear package structure, and detailed documentation ma
 
 Thank you for reading the PacketPulse project documentation.
 
-Author
+# Author
+
+**Raghuveer Kumawat**
+## Author
 
 **Raghuveer Kumawat**
 
-Software Engineer | Computer Science & Engineering | Full Stack Developer
+Software Engineering | Computer Science & Engineering | Java | Full Stack Development
+
 
 
 
@@ -2402,7 +2404,7 @@ Developing PacketPulse helped understand:
 
 • Network Security Fundamentals
 
-• Software Design
+ Design
 
 ---
 
