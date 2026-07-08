@@ -13,13 +13,14 @@ public class PcapReader {
     public List<PacketJob> readAllPackets() {
         List<PacketJob> packets = new ArrayList<>();
         try (DataInputStream dis = new DataInputStream(new FileInputStream(filePath))) {
-            dis.skipBytes(24); // Skip Global Header
+            dis.skipBytes(24);
 
             while (true) {
                 try {
-                    dis.readInt(); dis.readInt(); // Timestamps
+                    dis.readInt(); dis.readInt(); 
                     int len = Integer.reverseBytes(dis.readInt());
-                    dis.skipBytes(4); // Original length
+                    dis.skipBytes(4); 
+                    
 
                     byte[] packetData = new byte[len];
                     dis.readFully(packetData);
@@ -43,7 +44,7 @@ public class PcapReader {
                         job.payloadOffset = job.transportOffset + transHeaderLen;
                         job.payloadLength = len - job.payloadOffset;
 
-                        // Extraction: Payload to String (SNI)
+                        // Extraction  Payload to String (SNI)
                         if (job.payloadLength > 0) {
                             job.info = new String(packetData, job.payloadOffset, Math.min(job.payloadLength, 150));
                         } else {

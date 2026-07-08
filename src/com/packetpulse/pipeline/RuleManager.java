@@ -6,19 +6,17 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class RuleManager {
 
-    // Read-Write Locks for High Performance Concurrent Access
     private final ReentrantReadWriteLock ipLock = new ReentrantReadWriteLock();
     private final ReentrantReadWriteLock appLock = new ReentrantReadWriteLock();
     private final ReentrantReadWriteLock domainLock = new ReentrantReadWriteLock();
     private final ReentrantReadWriteLock portLock = new ReentrantReadWriteLock();
 
-    // Block lists using HashSets for O(1) lookups
+ 
     private final Set<Long> blockedIps = new HashSet<>();
     private final Set<AppType> blockedApps = new HashSet<>();
     private final Set<String> blockedDomains = new HashSet<>();
     private final Set<Integer> blockedPorts = new HashSet<>();
 
-    // ========== IP Blocking ==========
     public void blockIP(long ip) {
         ipLock.writeLock().lock();
         try { blockedIps.add(ip); } finally { ipLock.writeLock().unlock(); }
@@ -29,7 +27,6 @@ public class RuleManager {
         try { return blockedIps.contains(ip); } finally { ipLock.readLock().unlock(); }
     }
 
-    // ========== Application Blocking ==========
     public void blockApp(AppType app) {
         appLock.writeLock().lock();
         try { blockedApps.add(app); } finally { appLock.writeLock().unlock(); }
@@ -40,7 +37,6 @@ public class RuleManager {
         try { return blockedApps.contains(app); } finally { appLock.readLock().unlock(); }
     }
 
-    // ========== Domain Blocking ==========
     public void blockDomain(String domain) {
         domainLock.writeLock().lock();
         try { blockedDomains.add(domain.toLowerCase().trim()); } finally { domainLock.writeLock().unlock(); }
@@ -52,10 +48,7 @@ public class RuleManager {
         
         domainLock.readLock().lock();
         try {
-            // Exact match check
             if (blockedDomains.contains(lowerDomain)) return true;
-            
-            // Wildcard matching simulation (e.g., if facebook.com is blocked, block subdomains too)
             for (String blocked : blockedDomains) {
                 if (lowerDomain.endsWith("." + blocked) || lowerDomain.equals(blocked)) {
                     return true;
@@ -65,7 +58,6 @@ public class RuleManager {
         } finally { domainLock.readLock().unlock(); }
     }
 
-    // ========== Port Blocking ==========
     public void blockPort(int port) {
         portLock.writeLock().lock();
         try { blockedPorts.add(port); } finally { portLock.writeLock().unlock(); }
@@ -76,7 +68,6 @@ public class RuleManager {
         try { return blockedPorts.contains(port); } finally { portLock.readLock().unlock(); }
     }
 
-    // ========== Combined Firewall Check ==========
     public static class BlockReason {
         public final String type;
         public final String detail;

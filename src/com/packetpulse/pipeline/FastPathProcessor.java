@@ -13,7 +13,7 @@ public class FastPathProcessor extends Thread {
 
     public FastPathProcessor(int workerId) {
         this.workerId = workerId;
-        this.inputQueue = new TSQueue(10000); // --- FIXED HERE: Allocated buffer size constraint
+        this.inputQueue = new TSQueue(10000);
     }
 
     public int getWorkerId() { 

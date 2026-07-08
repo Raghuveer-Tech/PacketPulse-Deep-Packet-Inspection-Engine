@@ -16,7 +16,7 @@ public class Connection {
     
     public PacketAction action = PacketAction.FORWARD;
     
-    // TCP Flag Tracker flags
+    
     public boolean synSeen = false;
     public boolean synAckSeen = false;
     public boolean finSeen = false;

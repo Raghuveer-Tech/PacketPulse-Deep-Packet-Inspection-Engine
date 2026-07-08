@@ -81,7 +81,6 @@ public class PacketParser {
             job.payloadLength = 0;
         }
 
-        // --- FIXED HERE: Converting long type IP format to readable String Structures
         String srcIpStr = ipToString(srcIp);
         String dstIpStr = ipToString(dstIp);
 

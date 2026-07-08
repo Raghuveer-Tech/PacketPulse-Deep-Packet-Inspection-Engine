@@ -10,7 +10,6 @@ public class PolicyEngine {
     public static boolean isBlocked(String domain) {
         if (domain == null || domain.equals("Unknown")) return false;
         
-        // Normalize: "www.google.com" ko "google.com" banana padega
         String cleanDomain = domain.replace("www.", "");
         
         return BLOCKED_DOMAINS.contains(cleanDomain.toLowerCase());

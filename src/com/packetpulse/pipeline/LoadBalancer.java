@@ -12,7 +12,6 @@ public class LoadBalancer implements Runnable {
     private final TSQueue inputQueue = new TSQueue(10000);
     private final List<TSQueue> fpQueues;
     
-    // Statistics Counters (Thread-Safe)
     public final LongAdder packetsReceived = new LongAdder();
     public final LongAdder packetsDispatched = new LongAdder();
 
@@ -45,22 +44,20 @@ public class LoadBalancer implements Runnable {
                 if (job == null) continue;
 
                 packetsReceived.increment();
-                
-                // Route safely using FiveTuple consistent hash math
+              
                 int fpTargetIndex = selectFP(job.tuple);
                 fpQueues.get(fpTargetIndex).push(job);
                 
                 packetsDispatched.increment();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                break; // Clean pipeline breakout
+                break; 
             }
         }
     }
 
     private int selectFP(FiveTuple tuple) {
         if (tuple == null) return 0;
-        // Formula: Math.abs ensures positive index calculation bounds
         int hash = Math.abs(tuple.hashCode());
         return fpStartId + (hash % fpQueues.size());
     }
@@ -68,9 +65,6 @@ public class LoadBalancer implements Runnable {
     public TSQueue getInputQueue() { return inputQueue; }
 }
 
-// ============================================================================
-// LBManager - Groups and launches Multiple Load Balancing Threads
-// ============================================================================
 class LBManager {
     private final List<LoadBalancer> lbs = new ArrayList<>();
 

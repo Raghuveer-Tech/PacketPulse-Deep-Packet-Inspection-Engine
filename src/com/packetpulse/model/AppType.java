@@ -25,7 +25,6 @@ public enum AppType {
     GITHUB,
     CLOUDFLARE;
 
-    // Simple method to convert website string (SNI) to AppType enum
     public static AppType sniToAppType(String sni) {
         if (sni == null) return UNKNOWN;
         String lower = sni.toLowerCase();
@@ -35,6 +34,6 @@ public enum AppType {
         if (lower.contains("github")) return GITHUB;
         if (lower.contains("twitter")) return TWITTER;
         if (lower.contains("instagram")) return INSTAGRAM;
-        return HTTPS; // Default if it's secure but not in list
+        return HTTPS; // Default if secure but not in list
     }
 }

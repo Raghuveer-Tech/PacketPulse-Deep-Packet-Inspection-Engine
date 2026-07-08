@@ -13,8 +13,6 @@ public class Main {
         List<PacketJob> packets = reader.readAllPackets();
 
         printBanner();
-
-        // 1. INPUT METADATA (Boxed Style)
         System.out.println(" +----------------------------------------------------------------------+");
         System.out.println(" |                         INPUT FILE METADATA                          |");
         System.out.println(" +----------------------------------------------------------------------+");
@@ -22,7 +20,6 @@ public class Main {
         System.out.printf("   %-20s : %.2f KB\n", "File Size", new File(fileName).length() / 1024.0);
         System.out.println(" +----------------------------------------------------------------------+\n");
 
-        // 2. TRAFFIC ANALYSIS TABLE
         System.out.println(" [TRAFFIC ANALYSIS LOGS - REAL-TIME PROCESSING]");
         System.out.println(" +-------+---------------------------+----------------------+------------+");
         System.out.printf(" | %-5s | %-25s | %-20s | %-10s |\n", "ID", "FLOW TUPLE", "APPLICATION (SNI)", "ACTION");
@@ -31,7 +28,6 @@ public class Main {
         int allowed = 0, dropped = 0;
         Map<String, Integer> appStats = new HashMap<>();
 
-        // Process all packets without any delay
         for (int i = 0; i < packets.size(); i++) {
             PacketJob p = packets.get(i);
             String domain = extractDomain(p.info);
@@ -53,7 +49,7 @@ public class Main {
 
     public static void printBanner() {
         System.out.println("\n==========================================================================");
-        System.out.println("   PACKETPULSE | ADVANCED DEEP PACKET INSPECTION (DPI) ENGINE   ");
+        System.out.println("      PACKETPULSE :  DEEP PACKET INSPECTION (DPI) ENGINE      ");
         System.out.println("==========================================================================\n");
     }
 

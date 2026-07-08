@@ -3,7 +3,7 @@ package com.packetpulse.model;
 public class PacketJob {
     public int packetId;
     public FiveTuple tuple;
-    public byte[] data; // Holds raw packet binary bytes
+    public byte[] data; 
     public String protocol; 
     public String info;
     
