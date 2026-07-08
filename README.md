@@ -24,7 +24,7 @@ The project is designed to demonstrate the fundamental workflow of packet inspec
 |----------|---------|
 | Project Name | PacketPulse – Deep Packet Inspection Engine |
 | Language | Java |
-| Project Type | Network Security / Packet Analysis |
+| Project Type | Network Security / Computer Engineering / Packet Analysis |
 | Input | Offline PCAP File (`test_dpi.pcap`) |
 | Output | Console-Based Traffic Analysis Report |
 | Architecture | Modular Package Structure |
@@ -360,7 +360,7 @@ The document includes:
 
 **Raghuveer Kumawat**
 
-Software Engineer | Java Developer | Computer Networks | Cyber Security Enthusiast
+Software Engineer | Computer Science & Engineering | Full Stack Developer
 
 ---
 

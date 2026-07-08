@@ -6,8 +6,7 @@ Author: Raghuveer Kumawat
 
 Language: Java
 
-Project Type: Network Security | Deep Packet Inspection (DPI)
-
+Project Type: Network Security | Deep Packet Inspection (DPI) | Computer Science & Engineering
 Version: 1.0
 
 ---
