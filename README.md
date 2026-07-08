@@ -6,7 +6,14 @@
 
 **PCAP Analysis • Packet Parsing • TLS SNI Extraction • Rule-Based Packet Filtering**
 
+# Author
+
+**Raghuveer Kumawat**
+
+Software Engineer | Computer Science & Engineering | Full Stack Developer
 </p>
+
+
 
 ---
 
