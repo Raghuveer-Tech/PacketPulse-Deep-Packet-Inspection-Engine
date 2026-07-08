@@ -1,370 +1,371 @@
 # PacketPulse - Deep Packet Inspection (DPI) Engine
 
-## Overview
+<p align="center">
 
-PacketPulse is a Java-based offline Deep Packet Inspection (DPI) project that demonstrates how captured network packets can be analyzed to identify network traffic and apply security policies. The application reads packets from a PCAP file, parses Ethernet, IPv4, TCP, and UDP headers, extracts useful payload information, identifies domains from network traffic, applies configurable filtering rules, and generates a detailed console-based security report.
+**Java-Based Offline Deep Packet Inspection (DPI) Engine**
 
-The project is designed to help understand the internal working of packet processing, protocol parsing, application identification, and basic firewall policy enforcement using Java.
+**PCAP Analysis • Packet Parsing • TLS SNI Extraction • Rule-Based Packet Filtering**
 
----
-# Project Objective
-
-The objective of this project is to simulate the basic workflow of a Deep Packet Inspection engine using Java. Instead of capturing live network traffic, PacketPulse processes an offline PCAP file and demonstrates how packets move through different stages of parsing, inspection, filtering, and reporting.
-
-The project focuses on learning networking concepts, packet structures, Java object-oriented programming, modular software design, and basic network security techniques.
+</p>
 
 ---
+
+# Overview
+
+PacketPulse is a Java-based Deep Packet Inspection (DPI) project that analyzes offline network traffic stored in PCAP files. The application reads captured packets, parses Ethernet, IPv4, TCP, and UDP protocols, extracts domain information from packet payloads, applies rule-based filtering using a policy engine, and generates a detailed console-based traffic analysis report.
+
+The project is designed to demonstrate the fundamental workflow of packet inspection and network traffic analysis using Java. It provides a modular implementation of protocol parsing, payload inspection, and policy-based packet filtering.
+
+---
+
+# Project Highlights
+
+| Category | Details |
+|----------|---------|
+| Project Name | PacketPulse – Deep Packet Inspection Engine |
+| Language | Java |
+| Project Type | Network Security / Packet Analysis |
+| Input | Offline PCAP File (`test_dpi.pcap`) |
+| Output | Console-Based Traffic Analysis Report |
+| Architecture | Modular Package Structure |
+| Processing | Offline Packet Inspection |
+| Status | Completed |
+
+---
+
+# Why This Project?
+
+Modern networks generate thousands of packets every second. Simply checking IP addresses and port numbers is often insufficient to understand which website or service is being accessed.
+
+PacketPulse demonstrates how captured packets can be parsed, inspected, and analyzed to identify destination domains and apply security rules. The project focuses on learning packet processing, protocol analysis, and basic firewall policy implementation using Java.
+
+---
+
 # Features
-1. Read packets from PCAP files
-2. Ethernet Frame Parsing
-3. IPv4 Header Parsing
-4. TCP Packet Parsing
-5. UDP Packet Parsing
-6. FiveTuple Flow Generation
-7. Payload Extraction
-8. TLS Client Hello Detection
-9. TLS Server Name Indication (SNI) Extraction
-10. Domain Name Detection
-11. Rule-Based Domain Blocking
-12. Console-Based Traffic Analysis
-13. Security Analysis Report
-14. Traffic Statistics Generation
-15. Modular Java Package Structure
+
+- Read packets from offline PCAP files
+- Parse Ethernet Frames
+- Parse IPv4 Headers
+- Parse TCP Packets
+- Parse UDP Packets
+- Generate FiveTuple flow information
+- Extract packet payload
+- Detect TLS Client Hello packets
+- Extract TLS Server Name Indication (SNI)
+- Identify destination domains
+- Apply rule-based domain filtering
+- Generate traffic statistics
+- Display structured console reports
+- Modular Java architecture
+- Easy to extend for additional protocols
 
 ---
-
 
 # Technologies Used
 
--> Programming Language
-    - Java
+## Programming Language
 
--> Core Java Concepts
-    - Object Oriented Programming
-    - Exception Handling
-    - Java Collections
-    - Regular Expressions
-    - Java Concurrency
-    - File Handling
+- Java
 
--> Collections Used
-    - HashMap
-    - HashSet
-    - ArrayList
-    - LinkedBlockingQueue
+## Core Java
 
--> Networking Concepts
+- Object-Oriented Programming (OOP)
+- Exception Handling
+- File Handling
+- Java Collections Framework
+- Java Concurrency
 
-    - Ethernet
-    - IPv4
-    - TCP
-    - UDP
-    - TLS
-    - HTTPS
-    - PCAP File Structure
+## Collections Used
+
+- HashMap
+- HashSet
+- ArrayList
+- LinkedBlockingQueue
+- LongAdder
+
+## Networking Concepts
+
+- Ethernet
+- IPv4
+- TCP
+- UDP
+- TLS Client Hello
+- Server Name Indication (SNI)
+- PCAP File Parsing
+
+## Development Tools
+
+- Visual Studio Code
+- Git
+- GitHub
 
 ---
 
 # Project Structure
 
-```
+```text
 PacketPulse-Deep-Packet-Inspection-Engine
 
 │
 
-├── src
-
-│ └── com
-
-│       └── packetpulse
-
-│               ├── model
-
-│               ├── parser
-
-│               ├── pipeline
-
-│               ├── Main.java
-
-│               └── PolicyEngine.java
-
+├── docs
+│   ├── input
+│   └── output
 │
-
+├── src
+│   └── com
+│       └── packetpulse
+│           ├── model
+│           ├── parser
+│           ├── pipeline
+│           ├── Main.java
+│           └── PolicyEngine.java
+│
 ├── test_dpi.pcap
-
-├── PROJECT_DETAILS.md
-
 ├── README.md
-
+├── PROJECT_DETAILS.md
 ├── LICENSE
-
 └── .gitignore
 ```
 
 ---
-# Package Description
 
-## model (src/com/packetpulse/model)
+# Project Workflow
 
-Contains all data models required by the application.
-
-Files include
-
-- AppType.java
-- Connection.java
-- ConnectionState.java
-- DPIStats.java
-- FiveTuple.java
-- PacketAction.java
-- PacketJob.java
-
----
-## parser (src/com/packetpulse/parser)
-
-Responsible for reading packets and extracting protocol information.
-
-Files include
-
-- PcapReader.java
-- PacketParser.java
-- SNIExtractor.java
-
----
-
-## pipeline (src/com/packetpulse/pipeline)
-
-Contains reusable processing components.
-
-Files include
-
-- TSQueue.java
-- LoadBalancer.java
-- FastPathProcessor.java
-- RuleManager.java
+```text
+test_dpi.pcap
+       │
+       ▼
+PcapReader
+       │
+       ▼
+PacketParser
+       │
+       ▼
+FiveTuple Generation
+       │
+       ▼
+Payload Inspection
+       │
+       ▼
+SNI / Domain Detection
+       │
+       ▼
+Policy Engine
+       │
+       ▼
+FORWARDED / DROPPED
+       │
+       ▼
+Traffic Statistics
+       │
+       ▼
+Console Report
+```
 
 ---
 
-## Main.java file
+# Input
 
-Application entry point.
+PacketPulse accepts an offline packet capture file (`test_dpi.pcap`) as input.
 
-Responsible for
+The PCAP file contains captured network packets. Every packet is read sequentially, parsed, inspected, and processed through the packet inspection pipeline.
 
-- Reading PCAP
-- Processing packets
-- Displaying output
-- Generating statistics
+### Input Screenshots
 
----
+<p align="center">
+<img src="docs/input/Input-1.png" width="900">
+</p>
 
-## PolicyEngine.java file
+<p align="center">
+<img src="docs/input/Input-2.png" width="900">
+</p>
 
-Contains domain blocking rules.
-
-Current blocked domains include
-
-- google.com
-- facebook.com
-- instagram.com
-- github.com
-- twitter.com
-- tiktok.com
+<p align="center">
+<img src="docs/input/Input-3.png" width="900">
+</p>
 
 ---
 
-# Processing Workflow
+# Output
 
-PCAP File
-    ↓
-Read Packets
-    ↓
-Parse Ethernet Header
-    ↓
-Parse IPv4 Header
-    ↓
-Parse TCP / UDP Header
-    ↓
-Generate FiveTuple
-    ↓
-Extract Payload
-    ↓
-Identify Domain
-    ↓
-Apply Policy
-    ↓
-Forward / Drop
-    ↓
-Generate Statistics
-    ↓
-Display Final Report
+After processing all packets, PacketPulse generates a structured console-based security analysis report.
 
----
+The report includes:
 
-# Sample Output
+- Input File Metadata
+- Packet-by-Packet Analysis
+- Flow Tuple Information
+- Detected Domain
+- Packet Action (FORWARDED / DROPPED)
+- Final Security Analysis Report
+- Traffic Statistics
 
-The application prints a structured traffic analysis report in the console.
+### Output Screenshots
 
-The report contains
-• Input File Metadata
+<p align="center">
+<img src="docs/output/Output-1.png" width="900">
+</p>
 
-Displays the PCAP filename and size before processing begins.
-• Traffic Analysis Logs
+<p align="center">
+<img src="docs/output/Output-2.png" width="900">
+</p>
 
-Displays packet-by-packet analysis including:
-- Packet ID
-- Flow Tuple
-- Extracted Domain
-- Packet Action
+<p align="center">
+<img src="docs/output/Output-3.png" width="900">
+</p>
 
-Example
-
-Packet 4
-
-Application
-www.google.com
-
-Action
-[DROPPED]
-
-Reason
-The domain exists inside the blocked domain list of the PolicyEngine.
-
-Packet 8
-
-Application
-www.youtube.com
-
-Action
-[FORWARDED]
-
-Reason
-The domain is not present in the blocked list.
+<p align="center">
+<img src="docs/output/Output-4.png" width="900">
+</p>
 
 ---
 
-# Final Security Report
+# Current Implementation
 
-After processing all packets, PacketPulse generates a summary report.
+The current implementation supports:
 
-The report includes
-
-- Total Analysed Packets
-
-- Forwarded Packets
-
-- Dropped Packets
-
-- Application Statistics
-
-For the provided test dataset
-
-Total Packets
-
-77
-
-Forwarded
-
-73
-
-Dropped
-
-4
-
-Blocked Domains
-
-- google.com
-
-- facebook.com
-
-- instagram.com
-
-- tiktok.com
+- Offline PCAP Processing
+- Ethernet Parsing
+- IPv4 Parsing
+- TCP Parsing
+- UDP Parsing
+- Packet Payload Extraction
+- FiveTuple Flow Generation
+- TLS SNI Extraction
+- Domain Detection
+- Rule-Based Domain Filtering
+- Traffic Statistics
+- Console Report Generation
 
 ---
 
 # Real-World Applications
 
-Although this project is developed for educational purposes, it demonstrates concepts used in
+Although developed as an educational project, PacketPulse demonstrates concepts used in:
 
-- Network Monitoring
-
-- Packet Analysis
-
-- Network Forensics
-
-- Traffic Inspection
-
+- Network Traffic Analysis
+- Packet Inspection
 - Firewall Rule Processing
-
+- Network Monitoring
 - Security Event Analysis
+- Computer Network Laboratories
+- Cyber Security Learning
+- Network Forensics
 
 ---
 
-# Future Improvements
+# System Requirements
 
-Future versions may include
+- Java JDK 17 or later
+- Visual Studio Code (or any Java IDE)
+- Windows / Linux / macOS
 
-- Live Packet Capture
+---
 
-- IPv6 Support
+# Project Setup
 
-- DNS Parser
+1. Clone the repository.
 
-- HTTP Header Analysis
+```bash
+git clone https://github.com/Raghuveer-Tech/PacketPulse---Deep-Packet-Inspection-Engine.git
+```
 
-- JSON Report Export
+2. Open the project in your preferred Java IDE.
 
-- Configuration File Support
+3. Ensure `test_dpi.pcap` is present in the project root.
 
-- GUI Dashboard
+4. Open the integrated terminal.
 
-- REST API
+---
+
+# Compile
+
+```bash
+javac -d bin src/com/packetpulse/model/*.java src/com/packetpulse/parser/*.java src/com/packetpulse/pipeline/*.java src/com/packetpulse/*.java
+```
+
+---
+
+# Run
+
+```bash
+java -cp bin com.packetpulse.Main
+```
+
+---
+
+# Expected Output
+
+After successful execution, the console displays:
+
+- Input File Metadata
+- Packet Analysis Logs
+- Flow Tuple
+- Detected Domain
+- Packet Action
+- Final Security Analysis Report
+- Traffic Statistics
+
+---
+
+# Skills Demonstrated
+
+- Java Programming
+- Object-Oriented Programming
+- Computer Networks
+- TCP/IP Protocol Analysis
+- Packet Parsing
+- Deep Packet Inspection (DPI)
+- TLS SNI Extraction
+- Rule-Based Packet Filtering
+- Java Collections
+- Java Concurrency
+- Modular Software Design
+- Git & GitHub
 
 ---
 
 # Documentation
 
-Detailed implementation documentation is available in
+Detailed project documentation is available in:
 
-PROJECT_DETAILS.md
+**PROJECT_DETAILS.md**
 
-The documentation explains
+The document includes:
 
-- Folder Structure
-
-- Package Structure
-
-- Every Java File
-
-- Packet Flow
-
+- Project Explanation
+- Architecture
+- Workflow
+- Input & Output Explanation
+- Real-Life Use Cases
 - Execution Flow
+- Future Scope
 
-- Output Explanation
+---
 
-- Data Structures
+# Future Improvements
 
-- Design Decisions
-
-- Real-Life Mapping
-
-- Interview Questions
+- Live Packet Capture
+- IPv6 Support
+- DNS Query Parsing
+- HTTP Header Inspection
+- Configurable Rule Files
+- GUI Dashboard
+- JSON Report Export
 
 ---
 
 # Author
 
-Raghuveer Kumawat
+**Raghuveer Kumawat**
 
-Java Developer
-
-Cyber Security Enthusiast
-
-Computer Networks Learner
+Software Engineer | Java Developer | Computer Networks | Cyber Security Enthusiast
 
 ---
 
 # License
 
 This project is licensed under the MIT License.
-See the LICENSE file for complete license information.
+
+See the **LICENSE** file for complete license information.
