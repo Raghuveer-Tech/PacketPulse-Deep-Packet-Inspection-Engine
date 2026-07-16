@@ -27,11 +27,11 @@ public class Main {
         System.out.printf("   %-20s : %.2f KB\n", "File Size", new File(fileName).length() / 1024.0);
         System.out.println(" +----------------------------------------------------------------------+\n");
 
-        // --- Step 1: read raw packets ---
+        // read raw packets ---
         PcapReader reader = new PcapReader(fileName);
         List<PacketJob> packets = reader.readAllPackets();
 
-        // --- Step 2: parse protocol headers once, up front (fast, single-threaded) ---
+        // parse protocol headers once, up front (fast, single-threaded) ---
         // Deep inspection (SNI + rules) happens per-thread in FastPathProcessor.
         for (PacketJob job : packets) {
             PacketParser.parse(job); // sets job.tuple / offsets; leaves job.tuple == null if unparseable
@@ -46,13 +46,13 @@ public class Main {
         DPIStats stats = new DPIStats();
         Queue<String> results = new ConcurrentLinkedQueue<>();
 
-        // --- Step 4: build the FastPathProcessor pool ---
+        //build the FastPathProcessor pool ---
         List<FastPathProcessor> fps = new ArrayList<>();
         for (int i = 0; i < NUM_FPS; i++) {
             fps.add(new FastPathProcessor(i, ruleManager, stats, results));
         }
 
-        // --- Step 5: build LoadBalancers, each owning a slice of FP queues ---
+        //build LoadBalancers, each owning a slice of FP queues ---
         List<TSQueue> fpQueues = new ArrayList<>();
         for (FastPathProcessor fp : fps) fpQueues.add(fp.getInputQueue());
 
@@ -64,11 +64,11 @@ public class Main {
             lbs.add(new LoadBalancer(i, ownedQueues, i * FPS_PER_LB));
         }
 
-        // --- Step 6: start all workers ---
+        //start all workers ---
         for (FastPathProcessor fp : fps) fp.start();
         for (LoadBalancer lb : lbs) lb.start();
 
-        // --- Step 7: dispatch every packet into a LoadBalancer's queue ---
+        //dispatch every packet into a LoadBalancer's queue ---
         for (PacketJob job : packets) {
             int lbIndex = (job.tuple != null)
                     ? Math.abs(job.tuple.hashCode()) % lbs.size()
@@ -76,16 +76,16 @@ public class Main {
             lbs.get(lbIndex).getInputQueue().push(job);
         }
 
-        // --- Step 8: wait until every dispatched packet has been processed ---
+        //wait until every dispatched packet has been processed ---
         while (stats.totalPackets.sum() < packets.size()) {
             Thread.sleep(10);
         }
 
-        // --- Step 9: shut everything down cleanly ---
+        //shut everything down cleanly ---
         for (LoadBalancer lb : lbs) lb.stop();
         for (FastPathProcessor fp : fps) fp.terminate();
 
-        // --- Step 10: print the report ---
+        //print the report ---
         printResults(results);
         printFinalReport(stats);
         printThreadStats(lbs, fps);

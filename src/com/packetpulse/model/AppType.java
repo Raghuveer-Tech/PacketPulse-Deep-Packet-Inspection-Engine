@@ -34,6 +34,6 @@ public enum AppType {
         if (lower.contains("github")) return GITHUB;
         if (lower.contains("twitter")) return TWITTER;
         if (lower.contains("instagram")) return INSTAGRAM;
-        return HTTPS; // Default if secure but not in list
+        return HTTPS;
     }
 }

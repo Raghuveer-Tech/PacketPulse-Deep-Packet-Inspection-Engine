@@ -1,198 +1,263 @@
-# PacketPulse — Deep Packet Inspection (DPI) Engine (Java)
+# PacketPulse - Deep Packet Inspection Engine
 
-A Java-based offline Deep Packet Inspection engine that reads network traffic
-from `.pcap` files, parses protocol headers, extracts domain information from
-TLS/HTTP traffic, and applies rule-based filtering to classify packets as
+A multi-threaded Deep Packet Inspection (DPI) engine written in Java. It reads
+packets from a `.pcap` file, figures out which website or app each connection
+belongs to (even though the traffic is HTTPS-encrypted), and decides whether
+to forward or drop each packet based on a set of rules - the same basic idea
+behind a real firewall.
+
+## Tech Stack
+
+- **Language:** Java (plain JDK, no external libraries or frameworks)
+- **Concurrency:** `Thread` / `Runnable`, `ReentrantReadWriteLock`, `LongAdder`,
+  `ConcurrentLinkedQueue`, a custom thread-safe blocking queue (`TSQueue`)
+- **Collections:** `HashMap`, `HashSet`, `List`
+- **File I/O:** `DataInputStream` / `FileInputStream` for raw byte-level
+  `.pcap` reading
+- **Networking:** manual Ethernet / IPv4 / TCP / UDP header parsing, TLS
+  Client Hello parsing, bit-level operations (shifting, masking) to read
+  multi-byte fields from raw bytes
+- **Build:** plain `javac` - no Maven or Gradle
+
+## Features
+
+- Reads raw packets out of a `.pcap` capture file
+- Parses Ethernet, IPv4, TCP, and UDP headers directly from the byte stream
+- Extracts the domain name from encrypted HTTPS traffic by parsing the TLS
+  Client Hello and reading the SNI extension
+- Extracts the domain name from plain HTTP traffic via the `Host:` header
+- Maps a domain to a known app (YouTube, Facebook, Google, etc.)
+- Rule-based filtering on four axes: source IP, destination port, app type,
+  and domain (with subdomain matching)
+- Multi-threaded pipeline (2 load balancers, 4 worker threads) using
+  consistent hashing so every packet of the same connection always lands on
+  the same worker
+- Per-flow stateful tracking - a flow is classified and rule-checked once,
+  and every later packet of that flow reuses the stored decision
+- Thread-safe, lock-free stats aggregation across all worker threads
+- Console report: per-packet traffic log, forwarded/dropped summary, and
+  per-thread work distribution
+
+## What This Project Does
+
+When a browser connects to a site like `youtube.com` over HTTPS, the
+connection itself is encrypted, but the very first message of the handshake
+(the TLS Client Hello) sends the site's domain name in plain text, so the
+server knows which certificate to present. This is called SNI (Server Name
+Indication). This project pulls that domain name straight out of the raw
+packet bytes and uses it to identify the traffic.
+
+Once a domain is identified, it's checked against a list of rules (blocked
+domains, blocked apps, blocked IPs, blocked ports) and the packet is marked
 FORWARDED or DROPPED.
 
-
----
-
-## How to Run
-
-```bash
-javac -d bin src/com/packetpulse/model/*.java src/com/packetpulse/parser/*.java src/com/packetpulse/pipeline/*.java src/com/packetpulse/*.java
-java -cp bin com.packetpulse.Main
 ```
-
-Input: `test_dpi.pcap` (sample capture file, must be in the project root)
-Output: Console-based packet-by-packet log + final traffic summary report
-
----
+.pcap file -> read packets -> parse headers -> hash to a worker thread
+                                                        |
+                                        find domain, check rules,
+                                        remember the decision for that flow
+                                                        |
+                                                        v
+                                    FORWARD / DROP + final report
+```
 
 ## Project Structure
 
 ```
 src/com/packetpulse/
-├── model/       → Data structures (no logic)
-├── parser/      → Packet & protocol parsing logic
-├── pipeline/    → Concurrency components (queues, load balancing, workers)
-├── Main.java    → Entry point — currently runs the core sequential engine
-└── PolicyEngine.java → Simple domain blocklist used by Main
+  model/
+    AppType.java          - known apps (YouTube, Facebook, ...) + a function
+                            that maps a domain name to one of them
+    Connection.java       - everything known about one flow: its domain,
+                            app type, whether it's blocked, packet/byte counts
+    ConnectionState.java  - NEW / ESTABLISHED / CLASSIFIED / BLOCKED / CLOSED
+    DPIStats.java         - global counters, safe to update from many threads
+    FiveTuple.java        - identifies a flow: src IP+port, dst IP+port, protocol
+    PacketAction.java     - FORWARD / DROP / INSPECT / LOG_ONLY
+    PacketJob.java        - one packet plus everything the parser found in it
+
+  parser/
+    PacketParser.java     - reads raw bytes, pulls out IP addresses, ports,
+                            protocol, TCP flags, payload offset
+    PcapReader.java       - opens the .pcap file and reads out every packet's
+                            raw bytes
+    SNIExtractor.java     - digs into the payload and extracts the domain
+                            name (from a TLS Client Hello or an HTTP Host
+                            header)
+
+  pipeline/
+    FastPathProcessor.java - worker thread: finds the domain, checks the
+                              rules, remembers the decision for that flow
+    LoadBalancer.java       - worker thread: decides which
+                              FastPathProcessor should handle a packet
+    RuleManager.java        - stores block lists (IP/port/app/domain) and
+                              answers "should this be blocked?"
+    TSQueue.java             - queue that multiple threads can push/pop from
+                              safely at the same time
+
+  Main.java              - starts everything, feeds packets in, prints the
+                            final report
 ```
 
----
-
-## What Actually Runs Today (Main.java flow)
-
-This is the real, working execution path when you run the program:
+## Architecture
 
 ```
-test_dpi.pcap
-     │
-     ▼
-PcapReader.readAllPackets()
-     │  (reads raw bytes, manually extracts IP/port/payload per packet)
-     ▼
-Main.extractDomain(payload)
-     │  (regex-based domain string match on the raw payload)
-     ▼
-PolicyEngine.isBlocked(domain)
-     │  (checks against a hardcoded 6-domain blocklist)
-     ▼
-Console log line: FORWARDED / DROPPED
-     │
-     ▼
-Final report (packet counts, per-domain hit counts)
+                Main (reads the .pcap file)
+                         |
+           hashes each packet by its flow ID
+                         |
+            +------------+------------+
+            v                         v
+      LoadBalancer 0            LoadBalancer 1
+       (1 thread)                (1 thread)
+            |                         |
+      +-----+-----+             +-----+-----+
+      v           v              v           v
+  FastPath 0  FastPath 1    FastPath 2   FastPath 3
+  (1 thread)  (1 thread)    (1 thread)   (1 thread)
 ```
 
-### Files involved in this path
+Two LoadBalancer threads, each owning two FastPathProcessor threads - four
+worker threads in total. Every packet is hashed on its flow ID (source and
+destination IP/port + protocol), so all packets of the same connection
+always land on the same LoadBalancer and the same FastPathProcessor. That's
+what makes it possible to track a flow's state without needing to lock
+anything shared between workers - each FastPathProcessor only ever touches
+its own private table of flows, from its own thread.
 
-**`Main.java`**
-Entry point. Reads the pcap file via `PcapReader`, loops over every packet,
-extracts a domain via a regex against the raw payload bytes, checks it
-against `PolicyEngine`, prints a formatted console report (banner, per-packet
-table, final summary with top requested domains).
+## Stateful Flow Tracking
 
-**`parser/PcapReader.java`**
-Opens the `.pcap` file, skips the 24-byte global pcap header, then reads each
-packet record (16-byte packet header + raw bytes). For each packet it does
-its **own inline parsing** — assumes fixed Ethernet(14)/IP header offsets,
-manually pulls source/destination IP and ports out of fixed byte positions,
-and copies the first ~150 bytes of payload into `PacketJob.info` as a raw
-string for later regex matching.
+Every flow gets a `Connection` object the first time a packet for it is
+seen. The first time a domain is found for that flow (from its TLS Client
+Hello or HTTP request), the rules are checked once, and the result
+(FORWARD or DROP) is stored on that `Connection`, along with its state
+(`CLASSIFIED` or `BLOCKED`). Every later packet on that same flow reuses the
+stored decision instead of re-extracting the domain and re-checking the
+rules - closer to how a real firewall works, since it blocks or allows a
+whole connection rather than judging every packet in isolation.
 
-**`PolicyEngine.java`**
-A static, hardcoded blocklist of 6 domains (google.com, facebook.com,
-instagram.com, twitter.com, tiktok.com, github.com). Strips a leading `www.`
-and does an exact match. This is what actually decides FORWARD vs DROP in
-the current build — it does not use `RuleManager`.
+TCP handshake flags (SYN, SYN-ACK, FIN) are also tracked per flow, so the
+engine knows when a connection opens and closes.
 
----
+## Building and Running
 
-## Components That Exist But Are Not Yet Wired Into Main
+Compile:
+```
+javac -d bin src/com/packetpulse/model/*.java src/com/packetpulse/parser/*.java src/com/packetpulse/pipeline/*.java src/com/packetpulse/*.java
+```
 
-These were built to demonstrate specific concepts (proper protocol parsing,
-real TLS SNI extraction, thread-safe rule management, and a multi-threaded
-processing pipeline) but **`Main.java` does not currently call them**. They
-compile and are structurally complete, but they are not part of the live
-execution path above.
+Run:
+```
+java -cp bin com.packetpulse.Main
+```
 
-### `model/` — Data structures
+The program looks for a file named `test_dpi.pcap` in the project root.
 
-| File | Purpose |
+## Sample Run
+
+**Input file:** `test_dpi.pcap` — 6.83 KB, 77 packets, a mix of:
+- HTTPS/TLS connections to real-world sites — Google, YouTube, Facebook,
+  Instagram, Twitter, Amazon, Netflix, GitHub, Discord, Zoom, Telegram,
+  TikTok, Spotify, Cloudflare, Microsoft, Apple
+- A couple of plain HTTP requests
+- A few DNS lookups
+
+### Input Screenshots
+
+| | |
 |---|---|
-| `FiveTuple.java` | Represents a network flow: src IP, dst IP, src port, dst port, protocol. Used as the unit of identity for a connection. |
-| `Connection.java` | Represents a tracked flow's state — packet/byte counters, detected app type, SNI, timestamps, TCP flag history (SYN/SYN-ACK/FIN seen). |
-| `ConnectionState.java` | Enum: NEW → ESTABLISHED → CLASSIFIED → BLOCKED → CLOSED. Models the lifecycle a connection would move through. |
-| `AppType.java` | Enum of known applications (YouTube, Facebook, Google, etc.) with a `sniToAppType()` helper that maps an SNI hostname string to an app. |
-| `PacketAction.java` | Enum: FORWARD, DROP, INSPECT, LOG_ONLY. |
-| `PacketJob.java` | The unit of work passed through the pipeline — holds raw packet bytes, byte offsets for each protocol layer, and metadata. |
-| `DPIStats.java` | Atomic counters (`LongAdder`) for total packets/bytes, forwarded/dropped counts, protocol breakdown — designed for concurrent updates from multiple threads. |
+| ![Input file](docs/input/Input-1.png) | ![Input file details](docs/input/Input-2.png) |
+| **Fig 1.** Capture file loaded into the project | **Fig 2.** Packet-level view of the input traffic |
 
-### `parser/` — Real protocol parsing (not yet used by Main)
+![Input traffic sample](docs/input/Input-3.png)
+**Fig 3.** Sample of the traffic contained in `test_dpi.pcap`
 
-**`PacketParser.java`**
-A proper, general-purpose parser: validates Ethernet frame length, checks
-EtherType is IPv4, reads the actual IP header length from the header
-(instead of assuming it), branches on protocol (TCP/UDP), extracts TCP flags
-and computes the real payload offset using the TCP data-offset field. This
-is more correct than the inline parsing inside `PcapReader`, but it is
-currently unused — `PcapReader` does its own simplified version instead.
+### Console Output
 
-**`SNIExtractor.java`**
-Parses an actual TLS Client Hello message: verifies the record is a
-handshake (`0x16`) and a Client Hello (`0x01`), walks past the session ID,
-cipher suites, and compression methods fields, then scans the extensions
-list for the SNI extension (type `0x0000`) and pulls out the hostname. Also
-has a basic HTTP `Host:` header extractor. This is the real SNI-extraction
-logic — `Main.java` currently uses a much cruder regex instead of calling
-this class.
+```
+==========================================================================
+   PACKETPULSE : DEEP PACKET INSPECTION (DPI) ENGINE - MULTI-THREADED
+==========================================================================
 
-### `pipeline/` — Concurrency components (not yet used by Main)
+ +----------------------------------------------------------------------+
+ |                         INPUT FILE METADATA                          |
+ +----------------------------------------------------------------------+
+   File Name            : test_dpi.pcap
+   File Size            : 6.83 KB
+ +----------------------------------------------------------------------+
 
-**`TSQueue.java`**
-A thread-safe blocking queue wrapper around `LinkedBlockingQueue`, with
-`push`/`pop`/`popWithTimeout` and a `shutdown()` flag for clean worker
-termination.
+ [TRAFFIC ANALYSIS LOGS]
+ +-------+-----------------------------------------------+------------------------+--------------+-------------+
+ | ID    | FLOW TUPLE                                    | DOMAIN                 | APP TYPE     | ACTION      |
+ +-------+-----------------------------------------------+------------------------+--------------+-------------+
+ | 1     | 192.168.1.100:54552 -> 142.250.185.206:443    | Unknown                | UNKNOWN      | [FORWARDED] |
+ | 4     | 192.168.1.100:54552 -> 142.250.185.206:443    | www.google.com         | GOOGLE       | [FORWARDED] |
+ | 8     | 192.168.1.100:58867 -> 142.250.185.110:443    | www.youtube.com        | YOUTUBE      | [DROPPED]   |
+ | 12    | 192.168.1.100:64044 -> 157.240.1.35:443       | www.facebook.com       | FACEBOOK     | [DROPPED]   |
+ | 48    | 192.168.1.100:63971 -> 99.86.0.100:443        | www.tiktok.com         | HTTPS        | [DROPPED]   |
+ | ...   | (72 more rows - 77 total)                     |                        |              |             |
+ +-------+-----------------------------------------------+------------------------+--------------+-------------+
 
-**`LoadBalancer.java`**
-Designed to sit between a packet reader and a pool of worker threads: pulls
-jobs from its own input queue, hashes the packet's `FiveTuple`, and
-dispatches it to one of several `FastPathProcessor` queues — so that all
-packets belonging to the same flow are always sent to the same worker
-(consistent hashing).
+ +======================================================================+
+ |                    FINAL SECURITY ANALYSIS REPORT                    |
+ +======================================================================+
+   Generated On         : 2026-07-17T03:31:59
+   Total Analysed       : 77
+   Protocol Breakdown   : 73 TCP | 4 UDP | 0 OTHER
+   Status Summary       : 74 FORWARDED | 3 DROPPED
+ +======================================================================+
 
-**`FastPathProcessor.java`**
-A worker thread intended to pull jobs from its queue and process them (parse
-→ extract SNI → check rules → classify). In the current code, `run()` only
-pops jobs and increments a counter — the actual processing logic has not
-been added yet.
+ +======================================================================+
+ |                       THREAD STATISTICS                              |
+ +======================================================================+
+   Pool Size            : 2 Load Balancers x 2 Fast Paths each = 4 worker threads
+   LB0  dispatched      : 32 packets
+   LB1  dispatched      : 45 packets
+   FP0  processed        : 12 packets (thread: FastPath-0)
+   FP1  processed        : 20 packets (thread: FastPath-1)
+   FP2  processed        : 20 packets (thread: FastPath-2)
+   FP3  processed        : 25 packets (thread: FastPath-3)
+ +======================================================================+
+```
 
-**`RuleManager.java`**
-A thread-safe rule engine using `ReentrantReadWriteLock` per rule type (IP,
-app, domain, port) so multiple worker threads can check rules concurrently
-without blocking each other on writes. Supports blocking by IP, app type,
-domain (including subdomain matching), and port, and returns a `BlockReason`
-explaining which rule matched. This is more capable than `PolicyEngine`, but
-is not currently instantiated or called from `Main`.
+### Output Screenshots
 
----
+| | | |
+|---|---|---|
+| ![Terminal output - traffic logs](docs/output/Output1.png) | ![Terminal output - final report](docs/output/Output2.png) | ![Terminal output - thread stats](docs/output/Output3.png) |
+| **Fig 4.** Per-packet traffic log | **Fig 5.** Final security summary | **Fig 6.** Per-thread work distribution |
 
-## Known Issue
+### Reading the Results
 
-`FiveTuple.equals()` currently always returns `true` regardless of the two
-objects being compared. This has no effect on the current execution path
-(which doesn't use `FiveTuple` as a map key), but it would cause incorrect
-flow deduplication if `FiveTuple` were used as a `HashMap`/`HashSet` key —
-which is exactly the intended use once the pipeline is wired up. Needs a
-proper field-by-field comparison.
+- **3 packets dropped:** YouTube (domain rule), Facebook (app rule), TikTok
+  (domain rule) — all matched against the rules configured in `Main.java`.
+- **`Unknown` / `UNKNOWN` rows:** these are the handshake packets (SYN,
+  SYN-ACK) that arrive *before* the TLS Client Hello — no domain has been
+  seen for that flow yet.
+- **Amazon / Netflix / Discord show up as `HTTPS`, not their own app type:**
+  `AppType.java` currently only has explicit name-matching for a handful of
+  services (Google, Facebook, YouTube, Twitter, Instagram, GitHub) —
+  everything else falls through to the generic `HTTPS` label.
+- **Work is unevenly split across the 4 workers (12 / 20 / 20 / 25):**
+  expected — hashing distributes whole *flows*, not individual packets, and
+  there are only ~20 distinct flows across the 77 packets.
 
----
+## Known Limitations
 
-## Why the Codebase Looks Like This
+- Input filename is hardcoded (`test_dpi.pcap`), not read from a
+  command-line argument.
+- Block rules are hardcoded in `Main.java` - no config file or CLI flags.
+- No output `.pcap` file is written - the engine only prints a report.
+- IPv4 only, no IPv6.
+- Only single-packet TLS Client Hellos are handled - one split across
+  multiple TCP segments won't be reassembled.
+- `AppType.sniToAppType()` only recognizes a handful of domains by name.
 
-The `parser/` and `pipeline/` packages were built to explore how a real DPI
-engine would parse protocols correctly and process packets concurrently at
-scale, before wiring that into the main execution flow. `Main.java` today
-runs the simpler, sequential version so there's always a working demo.
+## Ideas for Extending This
 
----
-
-## Planned Next Steps
-
-- [ ] Fix `FiveTuple.equals()`
-- [ ] Route `PcapReader` through `PacketParser` instead of its own inline parsing
-- [ ] Replace the regex domain match in `Main` with `SNIExtractor.extractTLS()`
-- [ ] Replace `PolicyEngine` with `RuleManager` for rule checks
-- [ ] Start `LoadBalancer` + `FastPathProcessor` threads from `Main` and route
-      packets through the queue-based pipeline instead of a simple for-loop
-- [ ] Fill in `FastPathProcessor.run()` with real parse → classify → rule-check logic
-- [ ] Track connection state using `Connection` / `ConnectionState`, and
-      report using `DPIStats` instead of a plain `HashMap`
-
----
-
-## Skills Demonstrated
-
-- Java (OOP, exceptions, file I/O, collections, concurrency primitives)
-- Manual byte-level protocol parsing (Ethernet, IPv4, TCP, UDP)
-- TLS Client Hello structure and SNI extraction
-- Thread-safe data structures (`ReentrantReadWriteLock`, blocking queues, `LongAdder`)
-- Producer-consumer / load-balanced worker pool design (architected, integration in progress)
-
----
-
-## License
-
-MIT
+- Read the input filename and block rules from command-line arguments.
+- Write the forwarded packets out to a new `.pcap` file.
+- Add more domain-to-app mappings in `AppType.java`.
+- Add subnet/CIDR-based IP blocking instead of single-IP matching.
+- Add unit tests for `PacketParser` and `SNIExtractor`.
+- Add IPv6 support.

@@ -4,14 +4,7 @@ import com.packetpulse.model.PacketJob;
 import java.io.*;
 import java.util.*;
 
-/**
- * Reads raw packets out of a .pcap file.
- *
- * This class no longer parses Ethernet/IP/TCP headers itself — that
- * duplicated PacketParser and was fragile (assumed fixed offsets). It now
- * only reads the pcap global header + per-packet records and hands back raw
- * bytes. Protocol parsing happens once, in PacketParser.parse().
- */
+
 public class PcapReader {
     private final String filePath;
 

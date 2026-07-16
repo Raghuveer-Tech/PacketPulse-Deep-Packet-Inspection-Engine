@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.LongAdder;
  * LoadBalancer owns, hashing on the packet's FiveTuple so that all packets
  * of the same flow always land on the same worker.
  *
- * FIX: the original selectFP() did `fpStartId + (hash % fpQueues.size())`
+ * the original selectFP() did `fpStartId + (hash % fpQueues.size())`
  * where fpQueues was the FULL list of every FP in the system. That means
  * for any LoadBalancer with fpStartId > 0, the result could exceed the
  * list's actual bounds and throw IndexOutOfBoundsException. Fixed by having

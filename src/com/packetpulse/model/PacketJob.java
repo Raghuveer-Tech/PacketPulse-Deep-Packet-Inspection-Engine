@@ -7,7 +7,7 @@ public class PacketJob {
     public String protocol; 
     public String info;
     
-    // Byte offset boundaries
+
     public int ethOffset = 0;
     public int ipOffset = 0;
     public int transportOffset = 0;
@@ -16,7 +16,7 @@ public class PacketJob {
     
     public byte tcpFlags = 0;
     
-    // Timestamps
+  
     public long tsSec;
     public long tsUsec;
 }

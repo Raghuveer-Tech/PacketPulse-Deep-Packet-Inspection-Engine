@@ -22,9 +22,6 @@ public class FiveTuple {
         return srcIp + ":" + srcPort + " -> " + dstIp + ":" + dstPort;
     }
 
-    // FIX: was "return true;" before — that made every FiveTuple equal to
-    // every other one, which would silently corrupt any HashMap/HashSet
-    // keyed by FiveTuple (all flows would collide into one bucket).
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
