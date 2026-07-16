@@ -1,378 +1,198 @@
-# PacketPulse - Deep Packet Inspection (DPI) Engine
+# PacketPulse — Deep Packet Inspection (DPI) Engine (Java)
 
-<p align="center">
-
-**Java-Based Offline Deep Packet Inspection (DPI) Engine**
-
-**PCAP Analysis • Packet Parsing • TLS SNI Extraction • Rule-Based Packet Filtering**
-
-**Developed by:** **Raghuveer Kumawat**
-</p>
-
+A Java-based offline Deep Packet Inspection engine that reads network traffic
+from `.pcap` files, parses protocol headers, extracts domain information from
+TLS/HTTP traffic, and applies rule-based filtering to classify packets as
+FORWARDED or DROPPED.
 
 
 ---
 
-# Overview
-
-PacketPulse is a Java-based Deep Packet Inspection (DPI) project that analyzes offline network traffic stored in PCAP files. The application reads captured packets, parses Ethernet, IPv4, TCP, and UDP protocols, extracts domain information from packet payloads, applies rule-based filtering using a policy engine, and generates a detailed console-based traffic analysis report.
-
-The project is designed to demonstrate the fundamental workflow of packet inspection and network traffic analysis using Java. It provides a modular implementation of protocol parsing, payload inspection, and policy-based packet filtering.
-
----
-
-# Project Highlights
-
-| Category | Details |
-|----------|---------|
-| Project Name | PacketPulse – Deep Packet Inspection Engine |
-| Language | Java |
-| Project Type | Network Security / Computer Engineering / Packet Analysis |
-| Input | Offline PCAP File (`test_dpi.pcap`) |
-| Output | Console-Based Traffic Analysis Report |
-| Architecture | Modular Package Structure |
-| Processing | Offline Packet Inspection |
-| Status | Completed |
-
----
-
-# Why This Project?
-
-Modern networks generate thousands of packets every second. Simply checking IP addresses and port numbers is often insufficient to understand which website or service is being accessed.
-
-PacketPulse demonstrates how captured packets can be parsed, inspected, and analyzed to identify destination domains and apply security rules. The project focuses on learning packet processing, protocol analysis, and basic firewall policy implementation using Java.
-
----
-
-# Features
-
-- Read packets from offline PCAP files
-- Parse Ethernet Frames
-- Parse IPv4 Headers
-- Parse TCP Packets
-- Parse UDP Packets
-- Generate FiveTuple flow information
-- Extract packet payload
-- Detect TLS Client Hello packets
-- Extract TLS Server Name Indication (SNI)
-- Identify destination domains
-- Apply rule-based domain filtering
-- Generate traffic statistics
-- Display structured console reports
-- Modular Java architecture
-- Easy to extend for additional protocols
-
----
-
-# Technologies Used
-
-## Programming Language
-
-- Java
-
-## Core Java
-
-- Object-Oriented Programming (OOP)
-- Exception Handling
-- File Handling
-- Java Collections Framework
-- Java Concurrency
-
-## Collections Used
-
-- HashMap
-- HashSet
-- ArrayList
-- LinkedBlockingQueue
-- LongAdder
-
-## Networking Concepts
-
-- Ethernet
-- IPv4
-- TCP
-- UDP
-- TLS Client Hello
-- Server Name Indication (SNI)
-- PCAP File Parsing
-
-## Development Tools
-
-- Visual Studio Code
-- Git
-- GitHub
-
----
-
-# Project Structure
-
-```text
-PacketPulse-Deep-Packet-Inspection-Engine
-
-│
-
-├── docs
-│   ├── input
-│   └── output
-│
-├── src
-│   └── com
-│       └── packetpulse
-│           ├── model
-│           ├── parser
-│           ├── pipeline
-│           ├── Main.java
-│           └── PolicyEngine.java
-│
-├── test_dpi.pcap
-├── README.md
-├── PROJECT_DETAILS.md
-├── LICENSE
-└── .gitignore
-```
-
----
-
-# Project Workflow
-
-```text
-test_dpi.pcap
-       │
-       ▼
-PcapReader
-       │
-       ▼
-PacketParser
-       │
-       ▼
-FiveTuple Generation
-       │
-       ▼
-Payload Inspection
-       │
-       ▼
-SNI / Domain Detection
-       │
-       ▼
-Policy Engine
-       │
-       ▼
-FORWARDED / DROPPED
-       │
-       ▼
-Traffic Statistics
-       │
-       ▼
-Console Report
-```
-
----
-
-# Input
-
-PacketPulse accepts an offline packet capture file (`test_dpi.pcap`) as input.
-
-The PCAP file contains captured network packets. Every packet is read sequentially, parsed, inspected, and processed through the packet inspection pipeline.
-
-### Input Screenshots
-
-<p align="center">
-<img src="docs/input/Input-1.png" width="900">
-</p>
-
-<p align="center">
-<img src="docs/input/Input-2.png" width="900">
-</p>
-
-<p align="center">
-<img src="docs/input/Input-3.png" width="900">
-</p>
-
----
-
-# Output
-
-After processing all packets, PacketPulse generates a structured console-based security analysis report.
-
-The report includes:
-
-- Input File Metadata
-- Packet-by-Packet Analysis
-- Flow Tuple Information
-- Detected Domain
-- Packet Action (FORWARDED / DROPPED)
-- Final Security Analysis Report
-- Traffic Statistics
-
-### Output Screenshots
-
-<p align="center">
-<img src="docs/output/Output-1.png" width="900">
-</p>
-
-<p align="center">
-<img src="docs/output/Output-2.png" width="900">
-</p>
-
-<p align="center">
-<img src="docs/output/Output-3.png" width="900">
-</p>
-
-<p align="center">
-<img src="docs/output/Output-4.png" width="900">
-</p>
-
----
-
-# Current Implementation
-
-The current implementation supports:
-
-- Offline PCAP Processing
-- Ethernet Parsing
-- IPv4 Parsing
-- TCP Parsing
-- UDP Parsing
-- Packet Payload Extraction
-- FiveTuple Flow Generation
-- TLS SNI Extraction
-- Domain Detection
-- Rule-Based Domain Filtering
-- Traffic Statistics
-- Console Report Generation
-
----
-
-# Real-World Applications
-
-Although developed as an educational project, PacketPulse demonstrates concepts used in:
-
-- Network Traffic Analysis
-- Packet Inspection
-- Firewall Rule Processing
-- Network Monitoring
-- Security Event Analysis
-- Computer Network Laboratories
-- Cyber Security Learning
-- Network Forensics
-
----
-
-# System Requirements
-
-- Java JDK 17 or later
-- Visual Studio Code (or any Java IDE)
-- Windows / Linux / macOS
-
----
-
-# Project Setup
-
-1. Clone the repository.
-
-```bash
-git clone https://github.com/Raghuveer-Tech/PacketPulse---Deep-Packet-Inspection-Engine.git
-```
-
-2. Open the project in your preferred Java IDE.
-
-3. Ensure `test_dpi.pcap` is present in the project root.
-
-4. Open the integrated terminal.
-
----
-
-# Compile
+## How to Run
 
 ```bash
 javac -d bin src/com/packetpulse/model/*.java src/com/packetpulse/parser/*.java src/com/packetpulse/pipeline/*.java src/com/packetpulse/*.java
-```
-
----
-
-# Run
-
-```bash
 java -cp bin com.packetpulse.Main
 ```
 
----
-
-# Expected Output
-
-After successful execution, the console displays:
-
-- Input File Metadata
-- Packet Analysis Logs
-- Flow Tuple
-- Detected Domain
-- Packet Action
-- Final Security Analysis Report
-- Traffic Statistics
+Input: `test_dpi.pcap` (sample capture file, must be in the project root)
+Output: Console-based packet-by-packet log + final traffic summary report
 
 ---
 
-# Skills Demonstrated
+## Project Structure
 
-- Java Programming
-- Object-Oriented Programming
-- Computer Networks
-- TCP/IP Protocol Analysis
-- Packet Parsing
-- Deep Packet Inspection (DPI)
-- TLS SNI Extraction
-- Rule-Based Packet Filtering
-- Java Collections
-- Java Concurrency
-- Modular Software Design
-- Git & GitHub
+```
+src/com/packetpulse/
+├── model/       → Data structures (no logic)
+├── parser/      → Packet & protocol parsing logic
+├── pipeline/    → Concurrency components (queues, load balancing, workers)
+├── Main.java    → Entry point — currently runs the core sequential engine
+└── PolicyEngine.java → Simple domain blocklist used by Main
+```
 
 ---
 
-# Documentation
+## What Actually Runs Today (Main.java flow)
 
-Detailed project documentation is available in:
+This is the real, working execution path when you run the program:
 
-**PROJECT_DETAILS.md**
+```
+test_dpi.pcap
+     │
+     ▼
+PcapReader.readAllPackets()
+     │  (reads raw bytes, manually extracts IP/port/payload per packet)
+     ▼
+Main.extractDomain(payload)
+     │  (regex-based domain string match on the raw payload)
+     ▼
+PolicyEngine.isBlocked(domain)
+     │  (checks against a hardcoded 6-domain blocklist)
+     ▼
+Console log line: FORWARDED / DROPPED
+     │
+     ▼
+Final report (packet counts, per-domain hit counts)
+```
 
-The document includes:
+### Files involved in this path
 
-- Project Explanation
-- Architecture
-- Workflow
-- Input & Output Explanation
-- Real-Life Use Cases
-- Execution Flow
-- Future Scope
+**`Main.java`**
+Entry point. Reads the pcap file via `PcapReader`, loops over every packet,
+extracts a domain via a regex against the raw payload bytes, checks it
+against `PolicyEngine`, prints a formatted console report (banner, per-packet
+table, final summary with top requested domains).
+
+**`parser/PcapReader.java`**
+Opens the `.pcap` file, skips the 24-byte global pcap header, then reads each
+packet record (16-byte packet header + raw bytes). For each packet it does
+its **own inline parsing** — assumes fixed Ethernet(14)/IP header offsets,
+manually pulls source/destination IP and ports out of fixed byte positions,
+and copies the first ~150 bytes of payload into `PacketJob.info` as a raw
+string for later regex matching.
+
+**`PolicyEngine.java`**
+A static, hardcoded blocklist of 6 domains (google.com, facebook.com,
+instagram.com, twitter.com, tiktok.com, github.com). Strips a leading `www.`
+and does an exact match. This is what actually decides FORWARD vs DROP in
+the current build — it does not use `RuleManager`.
 
 ---
 
-# Future Improvements
+## Components That Exist But Are Not Yet Wired Into Main
 
-- Live Packet Capture
-- IPv6 Support
-- DNS Query Parsing
-- HTTP Header Inspection
-- Configurable Rule Files
-- GUI Dashboard
-- JSON Report Export
+These were built to demonstrate specific concepts (proper protocol parsing,
+real TLS SNI extraction, thread-safe rule management, and a multi-threaded
+processing pipeline) but **`Main.java` does not currently call them**. They
+compile and are structurally complete, but they are not part of the live
+execution path above.
+
+### `model/` — Data structures
+
+| File | Purpose |
+|---|---|
+| `FiveTuple.java` | Represents a network flow: src IP, dst IP, src port, dst port, protocol. Used as the unit of identity for a connection. |
+| `Connection.java` | Represents a tracked flow's state — packet/byte counters, detected app type, SNI, timestamps, TCP flag history (SYN/SYN-ACK/FIN seen). |
+| `ConnectionState.java` | Enum: NEW → ESTABLISHED → CLASSIFIED → BLOCKED → CLOSED. Models the lifecycle a connection would move through. |
+| `AppType.java` | Enum of known applications (YouTube, Facebook, Google, etc.) with a `sniToAppType()` helper that maps an SNI hostname string to an app. |
+| `PacketAction.java` | Enum: FORWARD, DROP, INSPECT, LOG_ONLY. |
+| `PacketJob.java` | The unit of work passed through the pipeline — holds raw packet bytes, byte offsets for each protocol layer, and metadata. |
+| `DPIStats.java` | Atomic counters (`LongAdder`) for total packets/bytes, forwarded/dropped counts, protocol breakdown — designed for concurrent updates from multiple threads. |
+
+### `parser/` — Real protocol parsing (not yet used by Main)
+
+**`PacketParser.java`**
+A proper, general-purpose parser: validates Ethernet frame length, checks
+EtherType is IPv4, reads the actual IP header length from the header
+(instead of assuming it), branches on protocol (TCP/UDP), extracts TCP flags
+and computes the real payload offset using the TCP data-offset field. This
+is more correct than the inline parsing inside `PcapReader`, but it is
+currently unused — `PcapReader` does its own simplified version instead.
+
+**`SNIExtractor.java`**
+Parses an actual TLS Client Hello message: verifies the record is a
+handshake (`0x16`) and a Client Hello (`0x01`), walks past the session ID,
+cipher suites, and compression methods fields, then scans the extensions
+list for the SNI extension (type `0x0000`) and pulls out the hostname. Also
+has a basic HTTP `Host:` header extractor. This is the real SNI-extraction
+logic — `Main.java` currently uses a much cruder regex instead of calling
+this class.
+
+### `pipeline/` — Concurrency components (not yet used by Main)
+
+**`TSQueue.java`**
+A thread-safe blocking queue wrapper around `LinkedBlockingQueue`, with
+`push`/`pop`/`popWithTimeout` and a `shutdown()` flag for clean worker
+termination.
+
+**`LoadBalancer.java`**
+Designed to sit between a packet reader and a pool of worker threads: pulls
+jobs from its own input queue, hashes the packet's `FiveTuple`, and
+dispatches it to one of several `FastPathProcessor` queues — so that all
+packets belonging to the same flow are always sent to the same worker
+(consistent hashing).
+
+**`FastPathProcessor.java`**
+A worker thread intended to pull jobs from its queue and process them (parse
+→ extract SNI → check rules → classify). In the current code, `run()` only
+pops jobs and increments a counter — the actual processing logic has not
+been added yet.
+
+**`RuleManager.java`**
+A thread-safe rule engine using `ReentrantReadWriteLock` per rule type (IP,
+app, domain, port) so multiple worker threads can check rules concurrently
+without blocking each other on writes. Supports blocking by IP, app type,
+domain (including subdomain matching), and port, and returns a `BlockReason`
+explaining which rule matched. This is more capable than `PolicyEngine`, but
+is not currently instantiated or called from `Main`.
 
 ---
 
-# Author
+## Known Issue
 
-**Raghuveer Kumawat**
-
-## Author
-
-**Raghuveer Kumawat**
-
-Software Engineering | Computer Science & Engineering | Java | Full Stack Development
+`FiveTuple.equals()` currently always returns `true` regardless of the two
+objects being compared. This has no effect on the current execution path
+(which doesn't use `FiveTuple` as a map key), but it would cause incorrect
+flow deduplication if `FiveTuple` were used as a `HashMap`/`HashSet` key —
+which is exactly the intended use once the pipeline is wired up. Needs a
+proper field-by-field comparison.
 
 ---
 
-# License
+## Why the Codebase Looks Like This
 
-This project is licensed under the MIT License.
+The `parser/` and `pipeline/` packages were built to explore how a real DPI
+engine would parse protocols correctly and process packets concurrently at
+scale, before wiring that into the main execution flow. `Main.java` today
+runs the simpler, sequential version so there's always a working demo.
 
-See the **LICENSE** file for complete license information.
+---
+
+## Planned Next Steps
+
+- [ ] Fix `FiveTuple.equals()`
+- [ ] Route `PcapReader` through `PacketParser` instead of its own inline parsing
+- [ ] Replace the regex domain match in `Main` with `SNIExtractor.extractTLS()`
+- [ ] Replace `PolicyEngine` with `RuleManager` for rule checks
+- [ ] Start `LoadBalancer` + `FastPathProcessor` threads from `Main` and route
+      packets through the queue-based pipeline instead of a simple for-loop
+- [ ] Fill in `FastPathProcessor.run()` with real parse → classify → rule-check logic
+- [ ] Track connection state using `Connection` / `ConnectionState`, and
+      report using `DPIStats` instead of a plain `HashMap`
+
+---
+
+## Skills Demonstrated
+
+- Java (OOP, exceptions, file I/O, collections, concurrency primitives)
+- Manual byte-level protocol parsing (Ethernet, IPv4, TCP, UDP)
+- TLS Client Hello structure and SNI extraction
+- Thread-safe data structures (`ReentrantReadWriteLock`, blocking queues, `LongAdder`)
+- Producer-consumer / load-balanced worker pool design (architected, integration in progress)
+
+---
+
+## License
+
+MIT

@@ -11,7 +11,6 @@ public class RuleManager {
     private final ReentrantReadWriteLock domainLock = new ReentrantReadWriteLock();
     private final ReentrantReadWriteLock portLock = new ReentrantReadWriteLock();
 
- 
     private final Set<Long> blockedIps = new HashSet<>();
     private final Set<AppType> blockedApps = new HashSet<>();
     private final Set<String> blockedDomains = new HashSet<>();
@@ -22,9 +21,28 @@ public class RuleManager {
         try { blockedIps.add(ip); } finally { ipLock.writeLock().unlock(); }
     }
 
+    // NEW: convenience overload so callers can pass "192.168.1.50" directly,
+    // since FiveTuple stores IPs as dotted-decimal Strings.
+    public void blockIP(String dottedIp) {
+        blockIP(ipToLong(dottedIp));
+    }
+
     public boolean isIPBlocked(long ip) {
         ipLock.readLock().lock();
         try { return blockedIps.contains(ip); } finally { ipLock.readLock().unlock(); }
+    }
+
+    public boolean isIPBlocked(String dottedIp) {
+        return isIPBlocked(ipToLong(dottedIp));
+    }
+
+    private static long ipToLong(String dottedIp) {
+        String[] parts = dottedIp.split("\\.");
+        long result = 0;
+        for (String part : parts) {
+            result = (result << 8) | (Long.parseLong(part) & 0xFF);
+        }
+        return result;
     }
 
     public void blockApp(AppType app) {
@@ -45,7 +63,7 @@ public class RuleManager {
     public boolean isDomainBlocked(String domain) {
         if (domain == null || domain.isEmpty()) return false;
         String lowerDomain = domain.toLowerCase().trim();
-        
+
         domainLock.readLock().lock();
         try {
             if (blockedDomains.contains(lowerDomain)) return true;
@@ -78,7 +96,7 @@ public class RuleManager {
         }
     }
 
-    public Optional<BlockReason> shouldBlock(long srcIp, int dstPort, AppType app, String domain) {
+    public Optional<BlockReason> shouldBlock(String srcIp, int dstPort, AppType app, String domain) {
         if (isIPBlocked(srcIp)) {
             return Optional.of(new BlockReason("IP", "Source IP is Blacklisted"));
         }
@@ -91,13 +109,13 @@ public class RuleManager {
         if (isDomainBlocked(domain)) {
             return Optional.of(new BlockReason("DOMAIN", "Domain [" + domain + "] matches Block Rules"));
         }
-        return Optional.empty(); // Safe to pass
+        return Optional.empty();
     }
 
     public void clearAll() {
-        ipLock.writeLock().lock();    try { blockedIps.clear(); }     finally { ipLock.writeLock().unlock(); }
-        appLock.writeLock().lock();   try { blockedApps.clear(); }    finally { appLock.writeLock().unlock(); }
-        domainLock.writeLock().lock();try { blockedDomains.clear(); } finally { domainLock.writeLock().unlock(); }
-        portLock.writeLock().lock();  try { blockedPorts.clear(); }   finally { portLock.writeLock().unlock(); }
+        ipLock.writeLock().lock();     try { blockedIps.clear(); }     finally { ipLock.writeLock().unlock(); }
+        appLock.writeLock().lock();    try { blockedApps.clear(); }    finally { appLock.writeLock().unlock(); }
+        domainLock.writeLock().lock(); try { blockedDomains.clear(); } finally { domainLock.writeLock().unlock(); }
+        portLock.writeLock().lock();   try { blockedPorts.clear(); }   finally { portLock.writeLock().unlock(); }
     }
 }
